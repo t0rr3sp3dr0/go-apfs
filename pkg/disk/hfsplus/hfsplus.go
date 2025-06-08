@@ -58,14 +58,11 @@ func New(device io.ReaderAt) (*HFSPlus, error) {
 	}
 
 	// Read volume header
-	if err := binary.Read(io.NewSectionReader(device, 1024, int64(binary.Size(fs.volumeHdr))), binary.BigEndian, &fs.volumeHdr); err != nil {
-		return nil, fmt.Errorf("failed to read volume header: %v", err)
+	hv, err := NewVolumeHeader(device)
+	if err != nil {
+		return nil, err
 	}
-
-	// Verify signature
-	if fs.volumeHdr.Signature != HFSPlusSigWord && fs.volumeHdr.Signature != HFSXSigWord {
-		return nil, fmt.Errorf("invalid HFS+ signature: %x", fs.volumeHdr.Signature)
-	}
+	fs.volumeHdr = *hv
 
 	// Initialize B-trees
 	if err := fs.initBTrees(); err != nil {
