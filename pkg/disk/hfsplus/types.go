@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf16"
+
+	"github.com/google/uuid"
 )
 
 type Signature uint16
@@ -233,6 +235,38 @@ func (id CatalogNodeID) String() string {
 	}
 }
 
+var (
+	FSUUIDNamespaceSHA1 = uuid.MustParse("B3E20F39-F292-11D6-97A4-00306543ECAC")
+)
+
+type FinderInfo struct {
+	BootableMacOSDirectoryId            uint32
+	StartupApplicationParentDirectoryId uint32
+	OpenWindowOnMountDirectoryId        uint32
+	BootableClassicMacOSDirectoryId     uint32
+	Reserved                            uint32
+	BootableMacOSXDirectoryId           uint32
+	VolumeId                            VolumeId
+}
+
+type VolumeId struct {
+	Hi uint32
+	Lo uint32
+}
+
+func (vi VolumeId) Uint64() uint64 {
+	return uint64(vi.Hi)<<32 | uint64(vi.Lo)
+}
+
+func (vi VolumeId) UUID() uuid.UUID {
+	if vi.Hi == 0 || vi.Lo == 0 {
+		return uuid.Nil
+	}
+
+	hilo := binary.BigEndian.AppendUint64(nil, vi.Uint64())
+	return uuid.NewMD5(FSUUIDNamespaceSHA1, hilo)
+}
+
 type ExtentDescriptor struct {
 	StartBlock uint32
 	BlockCount uint32
@@ -273,7 +307,7 @@ type VolumeHeader struct {
 	NextCatalogID      CatalogNodeID
 	WriteCount         uint32
 	EncodingsBitmap    uint64
-	FinderInfo         [8]uint32
+	FinderInfo         FinderInfo
 	AllocationFile     ForkData
 	ExtentsFile        ForkData
 	CatalogFile        ForkData

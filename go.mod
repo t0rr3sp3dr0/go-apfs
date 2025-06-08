@@ -8,6 +8,7 @@ require (
 	github.com/blacktop/lzfse-cgo v1.1.20
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.18.0
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/vbauerster/mpb/v7 v7.5.3
 )
