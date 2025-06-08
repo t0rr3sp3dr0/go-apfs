@@ -316,6 +316,24 @@ type VolumeHeader struct {
 	_                  [512]uint8 // Corrected reserved space
 }
 
+func NewVolumeHeader(ra io.ReaderAt) (*VolumeHeader, error) {
+	var vh VolumeHeader
+
+	sr := io.NewSectionReader(ra, 1024, int64(binary.Size(vh)))
+
+	// Read volume header
+	if err := binary.Read(sr, binary.BigEndian, &vh); err != nil {
+		return nil, fmt.Errorf("failed to read volume header: %v", err)
+	}
+
+	// Verify signature
+	if vh.Signature != HFSPlusSigWord && vh.Signature != HFSXSigWord {
+		return nil, fmt.Errorf("invalid HFS+ signature: %x", vh.Signature)
+	}
+
+	return &vh, nil
+}
+
 func (hdr *VolumeHeader) String() string {
 	return fmt.Sprintf(
 		"Volume Header:\n"+
